@@ -3,6 +3,7 @@ package com.space.service;
 import com.space.model.Ship;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ShipService {
 
@@ -11,5 +12,6 @@ public interface ShipService {
     void delete(Ship ship);
     Ship update(Ship ship);
     Ship getById(Long id);
+    List<Ship> searchByParameters(Map<String, Object> path);
 
 }

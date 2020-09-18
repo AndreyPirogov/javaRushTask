@@ -1,10 +1,13 @@
 package com.space.controller;
 
 
+import com.google.protobuf.MapEntry;
 import com.space.model.Ship;
+import com.space.model.ShipType;
 import com.space.service.ShipService;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -12,9 +15,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
 
-import java.util.Calendar;
-import java.util.GregorianCalendar;
-import java.util.List;
+import java.util.*;
 
 @Controller
 @RequestMapping(value = "/rest")
@@ -38,14 +39,22 @@ public class ShipController {
     }
 
     @RequestMapping(value = "/ships",method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE )
-    public ResponseEntity<List<Ship>> allShips() {
-        List<Ship> list = service.allShip();
+    public ResponseEntity<List<Ship>> allShips(@RequestParam  Map<String, Object> path){
 
-        return new ResponseEntity<>(list, HttpStatus.OK);
+        List<Ship> list;
+        if(!path.isEmpty()) list = service.searchByParameters(path);
+        else list = service.allShip();
+
+        return new ResponseEntity<>(list,  HttpStatus.OK);
     }
+
+
+
     @RequestMapping(value = "/ships/count",method = RequestMethod.GET ,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<Integer> countShips() {
-        List<Ship> list = service.allShip();
+    public ResponseEntity<Integer> countShips(@RequestParam  Map<String, Object> path) {
+        List<Ship> list;
+        if(!path.isEmpty()) list = service.searchByParameters(path);
+        else list = service.allShip();
 
         return new ResponseEntity<>(list.size(), HttpStatus.OK);
     }

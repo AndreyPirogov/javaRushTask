@@ -66,4 +66,10 @@ public class ShipDAOImpl implements ShipDAO {
 
         return ship;
     }
+
+    @Override
+    public List searchByParameters(String string) {
+        logger.debug("searchByParameters: " + string);
+        return em.createNativeQuery(string, Ship.class).getResultList();
+    }
 }

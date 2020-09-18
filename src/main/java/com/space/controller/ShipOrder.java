@@ -2,13 +2,8 @@ package com.space.controller;
 
 public enum ShipOrder {
     ID("id"), // default
-    NAME("name"),
-    PLANET("planet"),
-    SHIP_TYPE("shipType"),
-    DATE("prodDate"),
-    IS_USED("isUsed"),
     SPEED("speed"),
-    CREW_SIZE("crewSize"),
+    DATE("prodDate"),
     RATING("rating");
 
     private String fieldName;

@@ -11,4 +11,5 @@ public interface ShipDAO {
     void delete(Ship ship);
     void update(Ship ship);
     Ship getById(Long id);
+    List<Ship> searchByParameters(String string);
 }

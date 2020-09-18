@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 @Service("Service")
 public class ShipServiceImpl implements ShipService {
@@ -78,6 +79,11 @@ public class ShipServiceImpl implements ShipService {
     @Override
     public Ship getById(Long id) {
         return shipDAO.getById(id);
+    }
+
+    @Override
+    public List<Ship> searchByParameters(Map<String, Object> path) {
+        return null;
     }
 
     private Double rating(Long prodData, Double speed, Boolean isUsed ){
