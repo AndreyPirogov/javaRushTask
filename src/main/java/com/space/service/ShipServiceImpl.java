@@ -140,6 +140,7 @@ public class ShipServiceImpl implements ShipService {
     private StringBuilder question(Map<String, String> path) {
         Ship ship = new Ship();
         StringBuilder str = new StringBuilder();
+        java.sql.Date date = new java.sql.Date(1119);
         boolean chek = false;
         str.append(" where ");
 
@@ -163,14 +164,22 @@ public class ShipServiceImpl implements ShipService {
                 str.append(path.get("shipType")).append("' ");
                 chek = true;
             }
-      /*      if (path.containsKey("after")) {
-
-                str.append(path.get("after")).append(" ");
+          if (path.containsKey("after")) {
+                if(chek) str.append("and ");
+                long l = Long.parseLong(path.get("after"));
+                str.append("prodDate >='");
+                date.setTime(l);
+                str.append(date).append("' ");
+                chek = true;
             }
             if (path.containsKey("before")) {
-
-                str.append(path.get("before")).append(" ");
-            } */
+                if(chek) str.append("and ");
+                long l = Long.parseLong(path.get("before"));
+                str.append("prodDate <='");
+                date.setTime(l);
+                str.append(date).append("' ");
+                chek = true;
+            }
            if (path.containsKey("isUsed")) {
                if(chek) str.append("and ");
                str.append("isUsed ='");
@@ -182,7 +191,7 @@ public class ShipServiceImpl implements ShipService {
                 if(chek) str.append("and ");
                 ship.setSpeed(Double.parseDouble(path.get("minSpeed")));
                 if (ShipChekHelper.invalidSpeed(ship)) return null;
-                str.append("speed >'");
+                str.append("speed >='");
                 str.append(path.get("minSpeed")).append("' ");
                 chek = true;
             }
@@ -190,7 +199,7 @@ public class ShipServiceImpl implements ShipService {
                 if(chek) str.append("and ");
                 ship.setSpeed(Double.parseDouble(path.get("maxSpeed")));
                 if (ShipChekHelper.invalidSpeed(ship)) return null;
-                str.append("speed <'");
+                str.append("speed <='");
                 str.append(path.get("maxSpeed")).append("' ");
                 chek = true;
             }
@@ -198,26 +207,32 @@ public class ShipServiceImpl implements ShipService {
                 if(chek) str.append("and ");
                 ship.setCrewSize(Integer.parseInt(path.get("minCrewSize")));
                 if (ShipChekHelper.invalidCrewSize(ship)) return null;
-                str.append("crewSize >'");
+                str.append("crewSize >='");
                 str.append(path.get("minCrewSize")).append("' ");
                 chek = true;
             }
-            if (path.containsKey("crewSize")) {
+            if (path.containsKey("maxCrewSize")) {
                 if(chek) str.append("and ");
                 ship.setCrewSize(Integer.parseInt(path.get("maxCrewSize")));
                 if (ShipChekHelper.invalidCrewSize(ship)) return null;
-                str.append("maxCrewSize <'");
+                str.append("crewSize <='");
                 str.append(path.get("maxCrewSize")).append("' ");
                 chek = true;
             }
-          /*  if (path.containsKey("minRating")) {
-                if (Integer.parseInt("minRating") <= 0) return null;
-                str.append(path.get("minRating")).append(" ");
+            if (path.containsKey("minRating")) {
+                if(chek) str.append("and ");
+                if (Double.parseDouble(path.get("minRating")) <= 0) return null;
+                str.append("rating >='");
+                str.append(path.get("minRating")).append("' ");
+                chek = true;
             }
             if (path.containsKey("maxRating")) {
-                if (Integer.parseInt("maxRating") >= 1) return null;
-                str.append(path.get("maxRating")).append(" ");
-            }*/
+                if(chek) str.append("and ");
+                if (Double.parseDouble(path.get("maxRating")) <= 0) return null;
+                str.append("rating <='");
+                str.append(path.get("maxRating")).append("' ");
+                chek = true;
+            }
 
             if (chek) return str;
             else return null;
