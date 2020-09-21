@@ -12,6 +12,7 @@ public interface ShipService {
     void delete(Ship ship);
     Ship update(Ship ship);
     Ship getById(Long id);
-    List<Ship> searchByParameters(Map<String, Object> path);
+    List<Ship> searchByParameters(Map<String, String> path);
+    int searchByParametersForCount(Map<String, String> path);
 
 }

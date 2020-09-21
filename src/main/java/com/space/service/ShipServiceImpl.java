@@ -1,12 +1,15 @@
 package com.space.service;
 
 import com.space.model.Ship;
+import com.space.model.ShipChekHelper;
 import com.space.repository.ShipDAO;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
+
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -82,8 +85,48 @@ public class ShipServiceImpl implements ShipService {
     }
 
     @Override
-    public List<Ship> searchByParameters(Map<String, Object> path) {
-        return null;
+    public List<Ship> searchByParameters(Map<String, String> path) {
+        StringBuilder str = new StringBuilder("select * from ship ");
+        int pageNumber = 0;
+        int pageSize = 3;
+        try {
+            str = question(path,str) == null ? new StringBuilder("") : question(path,str);
+            if (path.containsKey("order")){
+                str.append("order by ");
+                switch (path.get("order")){
+                    case "ID" : str.append("id");
+                    break;
+                    case "SPEED" : str.append("speed");
+                    break;
+                    case "DATE" : str.append("prodDate");
+                    break;
+                    case "RATING" : str.append("rating");
+                    break;
+                }
+                str.append(" ");
+            }
+
+            if (path.containsKey("pageNumber")) pageNumber = Integer.parseInt(path.get("pageNumber"));
+            if (path.containsKey("pageSize")) pageSize = Integer.parseInt(path.get("pageSize"));
+
+        } catch (Exception e){
+            logger.error(e.getMessage());
+            return null;
+        }
+
+        List<Ship> question = shipDAO.searchByParameters(str.toString().trim(),pageNumber, pageSize);
+
+
+
+        return question;
+    }
+
+    @Override
+    public int searchByParametersForCount(Map<String, String> path) {
+        StringBuilder str = new StringBuilder("select * from ship ");
+         str = question(path, str);
+
+        return shipDAO.searchByParametersForCount(str.toString().trim());
     }
 
     private Double rating(Long prodData, Double speed, Boolean isUsed ){
@@ -93,4 +136,64 @@ public class ShipServiceImpl implements ShipService {
         result = (double)Math.round(result);
         return result / 100;
     }
-}
+
+    private StringBuilder question(Map<String, String> path, StringBuilder stringBuilder) {
+        Ship ship = new Ship();
+        StringBuilder str = new StringBuilder(stringBuilder);
+        str.append("where ");
+        if (path.containsKey("name")) {
+            ship.setName(path.get("name"));
+            if (ShipChekHelper.invalidName(ship)) return null;
+            str.append("name LIKE ").append("'%").append(path.get("name")).append("%' ");
+        }
+     /*   if (path.containsKey("planet")) {
+                ship.setPlanet(path.get("planet"));
+                if (ShipChekHelper.invalidPlanet(ship)) return null;
+                str.append("planet LIKE ").append("'%").append(path.get("planet")).append("%' ");
+            }
+            if (path.containsKey("shipType")) str.append(path.get("shipType")).append(" ");
+            if (path.containsKey("after")) {
+
+                str.append(path.get("after")).append(" ");
+            }
+            if (path.containsKey("before")) {
+
+                str.append(path.get("before")).append(" ");
+            }
+           if (path.containsKey("isUsed")) {
+                str.append(path.get("isUsed")).append(" ");
+            } else str.append("false");
+
+            if (path.containsKey("minSpeed")) {
+                ship.setSpeed(Double.parseDouble(path.get("miniSpeed")));
+                if (ShipChekHelper.invalidSpeed(ship)) return null;
+                str.append(path.get("minSpeed")).append(" ");
+            }
+            if (path.containsKey("maxSpeed")) {
+                ship.setSpeed(Double.parseDouble(path.get("maxSpeed")));
+                if (ShipChekHelper.invalidSpeed(ship)) return null;
+                str.append(path.get("maxSpeed")).append(" ");
+            }
+            if (path.containsKey("minCrewSize")) {
+                ship.setCrewSize(Integer.parseInt(path.get("minCrewSize")));
+                if (ShipChekHelper.invalidCrewSize(ship)) return null;
+                str.append(path.get("minCrewSize")).append(" ");
+            }
+            if (path.containsKey("maxCrewSize")) {
+                ship.setCrewSize(Integer.parseInt(path.get("maxCrewSize")));
+                if (ShipChekHelper.invalidCrewSize(ship)) return null;
+                str.append(path.get("maxCrewSize")).append(" ");
+            }
+            if (path.containsKey("minRating")) {
+                if (Integer.parseInt("minRating") <= 0) return null;
+                str.append(path.get("minRating")).append(" ");
+            }
+            if (path.containsKey("maxRating")) {
+                if (Integer.parseInt("maxRating") >= 1) return null;
+                str.append(path.get("maxRating")).append(" ");
+            }*/
+            if (str.length() > 25) return str;
+            else return stringBuilder;
+        }
+
+    }

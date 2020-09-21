@@ -3,6 +3,7 @@ package com.space.controller;
 
 import com.google.protobuf.MapEntry;
 import com.space.model.Ship;
+import com.space.model.ShipChekHelper;
 import com.space.model.ShipType;
 import com.space.service.ShipService;
 import org.apache.log4j.Logger;
@@ -39,11 +40,11 @@ public class ShipController {
     }
 
     @RequestMapping(value = "/ships",method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_UTF8_VALUE )
-    public ResponseEntity<List<Ship>> allShips(@RequestParam  Map<String, Object> path){
+    public ResponseEntity<List<Ship>> allShips(@RequestParam  Map<String, String> path){
 
-        List<Ship> list;
-        if(!path.isEmpty()) list = service.searchByParameters(path);
-        else list = service.allShip();
+        List<Ship> list = service.searchByParameters(path);
+
+        if(list == null)return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
         return new ResponseEntity<>(list,  HttpStatus.OK);
     }
@@ -51,18 +52,15 @@ public class ShipController {
 
 
     @RequestMapping(value = "/ships/count",method = RequestMethod.GET ,produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<Integer> countShips(@RequestParam  Map<String, Object> path) {
-        List<Ship> list;
-        if(!path.isEmpty()) list = service.searchByParameters(path);
-        else list = service.allShip();
+    public ResponseEntity<Integer> countShips(@RequestParam  Map<String, String> path) {
 
-        return new ResponseEntity<>(list.size(), HttpStatus.OK);
+        return new ResponseEntity<>(service.searchByParametersForCount(path), HttpStatus.OK);
     }
 
     @RequestMapping(value = "/ships/{id}", method = RequestMethod.GET, produces= MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<Ship> findShip (@PathVariable("id") Long id){
         logger.debug("findShip " + id);
-        if(id == null || id <= 0){
+        if(ShipChekHelper.invalidID(id)){
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         Ship ship = service.getById(id);
@@ -87,18 +85,18 @@ public class ShipController {
 
     @RequestMapping(value = "/ships", method = RequestMethod.POST, produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
     public ResponseEntity<Ship> addShip(@RequestBody Ship ship){
-        if(noBodyOption(ship) ) return  new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if(ShipChekHelper.noBodyOption(ship) ) return  new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         if(ship.getUsed() == null) ship.setUsed(false);
-        if(invalidName(ship)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        if (invalidPlanet(ship)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if(ShipChekHelper.invalidCrewSize(ship)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if (ShipChekHelper.invalidPlanet(ship)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
         double resultSpeed =Math.round(ship.getSpeed() * 100) / 100.0;
         logger.debug("resultSpeed=" + resultSpeed);
         ship.setSpeed(resultSpeed);
-        if(invalidSpeed(ship))return  new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if(ShipChekHelper.invalidSpeed(ship))return  new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
-        if(invalidCrewSize(ship)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        if (invalidDate(ship)) return  new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if(ShipChekHelper.invalidCrewSize(ship)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        if (ShipChekHelper.invalidDate(ship)) return  new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
         Ship shipResult = service.add(ship);
 
@@ -114,29 +112,29 @@ public class ShipController {
         if(service.getById(id) == null){
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        if(noBody(ship)) {
+        if(ShipChekHelper.noBody(ship)) {
             return new ResponseEntity<>(service.getById(id), HttpStatus.OK);
         }
         if(ship.getName() != null) {
-            if(invalidName(ship)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            if(ShipChekHelper.invalidName(ship)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         if(ship.getPlanet() != null) {
-            if (invalidPlanet(ship)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            if (ShipChekHelper.invalidPlanet(ship)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
         if(ship.getProdDate() != null){
-            if (invalidDate(ship)) return  new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            if (ShipChekHelper.invalidDate(ship)) return  new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
         if(ship.getSpeed() != null) {
             double resultSpeed = Math.round(ship.getSpeed() * 100) / 100.0;
             logger.debug("resultSpeed=" + resultSpeed);
             ship.setSpeed(resultSpeed);
-            if(invalidSpeed(ship))return  new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            if(ShipChekHelper.invalidSpeed(ship))return  new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 
         }
 
         if(ship.getCrewSize() != null){
-            if(invalidCrewSize(ship)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+            if(ShipChekHelper.invalidCrewSize(ship)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
 
@@ -146,73 +144,7 @@ public class ShipController {
     }
 
 
-    private boolean invalidName(@RequestBody Ship ship){
-        if(ship.getName().length() > 50){
-            logger.debug("name > 50");
-            return true;
-        }
-        if(ship.getName().trim().isEmpty()){
-            logger.debug("name  isEmpty");
-            return true;
-        }
-        return false;
-    }
-    private boolean invalidPlanet(@RequestBody Ship ship){
-        if( ship.getPlanet().length() > 50){
-            logger.debug(" planet > 50");
-            return true;
-        }
-        if(ship.getPlanet().trim().isEmpty()){
-            logger.debug("planet isEmpty");
-            return true;
-        }
-        return false;
-    }
 
-
-    private boolean invalidDate(@RequestBody Ship ship){
-        Calendar calendar = new GregorianCalendar();
-        calendar.setTime(ship.getProdDate());
-        Calendar calendarBefore = new GregorianCalendar(2800, Calendar.JANUARY, 1);
-        Calendar calendarAfter = new GregorianCalendar(3019, Calendar.DECEMBER, 31);
-        if (calendar.before(calendarBefore) || calendar.after(calendarAfter)){
-            logger.debug("badDate");
-            return  true;
-        }
-        return false;
-    }
-    private boolean invalidSpeed(@RequestBody Ship ship){
-        if (ship.getSpeed()  < 0.01 || ship.getSpeed() > 0.99){
-            logger.debug(" bad speed ");
-            return  true;
-        }
-        return false;
-    }
-
-    private boolean invalidCrewSize(@RequestBody Ship ship){
-        if (ship.getCrewSize() < 1 || ship.getCrewSize() > 9999){
-            logger.debug(" bad speed or bad crewSize");
-            return  true;
-        }
-        return false;
-    }
-
-    private  boolean noBodyOption(@RequestBody Ship ship){
-        if(ship.getName() == null || ship.getPlanet() == null || ship.getShipType() == null ||
-                ship.getProdDate() == null || ship.getSpeed() == null || ship.getCrewSize() == null  ){
-            logger.debug("is null");
-            return  true;
-        }
-        return false;
-    }
-    private  boolean noBody(@RequestBody Ship ship){
-        if(ship.getName() == null && ship.getPlanet() == null && ship.getShipType() == null &&
-                ship.getProdDate() == null && ship.getSpeed() == null && ship.getCrewSize() == null  ){
-            logger.debug("is null");
-            return  true;
-        }
-        return false;
-    }
 
 }
 

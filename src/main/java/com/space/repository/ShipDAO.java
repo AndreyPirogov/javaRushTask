@@ -3,6 +3,7 @@ package com.space.repository;
 import com.space.model.Ship;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ShipDAO {
 
@@ -11,5 +12,6 @@ public interface ShipDAO {
     void delete(Ship ship);
     void update(Ship ship);
     Ship getById(Long id);
-    List<Ship> searchByParameters(String string);
+    List<Ship> searchByParameters(String string,int page, int maxResult);
+    int searchByParametersForCount(String string);
 }

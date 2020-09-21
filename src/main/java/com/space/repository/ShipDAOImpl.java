@@ -12,6 +12,7 @@ import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @Transactional
@@ -63,13 +64,18 @@ public class ShipDAOImpl implements ShipDAO {
         } catch (NoResultException e){
             ship = null;
         }
-
         return ship;
     }
 
     @Override
-    public List searchByParameters(String string) {
+    public List searchByParameters(String string, int page, int maxResult) {
         logger.debug("searchByParameters: " + string);
-        return em.createNativeQuery(string, Ship.class).getResultList();
+        return em.createNativeQuery(string, Ship.class).setFirstResult(maxResult * page).setMaxResults(maxResult).getResultList();
+    }
+
+    @Override
+    public int searchByParametersForCount ( String string) {
+
+        return em.createNativeQuery(string,Ship.class).getResultList().size();
     }
 }
