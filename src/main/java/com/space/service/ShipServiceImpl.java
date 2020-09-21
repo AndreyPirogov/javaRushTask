@@ -17,6 +17,7 @@ import java.util.Map;
 @Service("Service")
 public class ShipServiceImpl implements ShipService {
     public static final Logger logger = Logger.getLogger(ShipServiceImpl.class);
+    private String SELECT = "select * from ship";
 
 
     @Qualifier("jpaContact")
@@ -86,11 +87,11 @@ public class ShipServiceImpl implements ShipService {
 
     @Override
     public List<Ship> searchByParameters(Map<String, String> path) {
-        StringBuilder str = new StringBuilder("select * from ship ");
+        StringBuilder str;
         int pageNumber = 0;
         int pageSize = 3;
         try {
-            str = question(path,str) == null ? new StringBuilder("") : question(path,str);
+            str = question(path) == null ? new StringBuilder(" ") : question(path);
             if (path.containsKey("order")){
                 str.append("order by ");
                 switch (path.get("order")){
@@ -102,9 +103,10 @@ public class ShipServiceImpl implements ShipService {
                     break;
                     case "RATING" : str.append("rating");
                     break;
+
                 }
                 str.append(" ");
-            }
+            } else str.append("order by id ");
 
             if (path.containsKey("pageNumber")) pageNumber = Integer.parseInt(path.get("pageNumber"));
             if (path.containsKey("pageSize")) pageSize = Integer.parseInt(path.get("pageSize"));
@@ -114,19 +116,17 @@ public class ShipServiceImpl implements ShipService {
             return null;
         }
 
-        List<Ship> question = shipDAO.searchByParameters(str.toString().trim(),pageNumber, pageSize);
 
-
+        List<Ship> question = shipDAO.searchByParameters(SELECT + str.toString(), pageNumber, pageSize);
 
         return question;
     }
 
     @Override
     public int searchByParametersForCount(Map<String, String> path) {
-        StringBuilder str = new StringBuilder("select * from ship ");
-         str = question(path, str);
+        StringBuilder str = question(path) == null ? new StringBuilder(" ") : question(path);
 
-        return shipDAO.searchByParametersForCount(str.toString().trim());
+        return shipDAO.searchByParametersForCount(SELECT + str.toString());
     }
 
     private Double rating(Long prodData, Double speed, Boolean isUsed ){
@@ -137,54 +137,80 @@ public class ShipServiceImpl implements ShipService {
         return result / 100;
     }
 
-    private StringBuilder question(Map<String, String> path, StringBuilder stringBuilder) {
+    private StringBuilder question(Map<String, String> path) {
         Ship ship = new Ship();
-        StringBuilder str = new StringBuilder(stringBuilder);
-        str.append("where ");
+        StringBuilder str = new StringBuilder();
+        boolean chek = false;
+        str.append(" where ");
+
         if (path.containsKey("name")) {
             ship.setName(path.get("name"));
             if (ShipChekHelper.invalidName(ship)) return null;
             str.append("name LIKE ").append("'%").append(path.get("name")).append("%' ");
+            chek = true;
         }
-     /*   if (path.containsKey("planet")) {
+
+        if (path.containsKey("planet")) {
+                if(chek) str.append("and ");
                 ship.setPlanet(path.get("planet"));
                 if (ShipChekHelper.invalidPlanet(ship)) return null;
                 str.append("planet LIKE ").append("'%").append(path.get("planet")).append("%' ");
+                chek = true;
             }
-            if (path.containsKey("shipType")) str.append(path.get("shipType")).append(" ");
-            if (path.containsKey("after")) {
+            if (path.containsKey("shipType")) {
+                if(chek) str.append("and ");
+                str.append("shipType ='");
+                str.append(path.get("shipType")).append("' ");
+                chek = true;
+            }
+      /*      if (path.containsKey("after")) {
 
                 str.append(path.get("after")).append(" ");
             }
             if (path.containsKey("before")) {
 
                 str.append(path.get("before")).append(" ");
-            }
+            } */
            if (path.containsKey("isUsed")) {
-                str.append(path.get("isUsed")).append(" ");
-            } else str.append("false");
+               if(chek) str.append("and ");
+               str.append("isUsed ='");
+               str.append(path.get("isUsed")).append("' ");
+               chek = true;
+            }
 
-            if (path.containsKey("minSpeed")) {
-                ship.setSpeed(Double.parseDouble(path.get("miniSpeed")));
+          if (path.containsKey("minSpeed")) {
+                if(chek) str.append("and ");
+                ship.setSpeed(Double.parseDouble(path.get("minSpeed")));
                 if (ShipChekHelper.invalidSpeed(ship)) return null;
-                str.append(path.get("minSpeed")).append(" ");
+                str.append("speed >'");
+                str.append(path.get("minSpeed")).append("' ");
+                chek = true;
             }
             if (path.containsKey("maxSpeed")) {
+                if(chek) str.append("and ");
                 ship.setSpeed(Double.parseDouble(path.get("maxSpeed")));
                 if (ShipChekHelper.invalidSpeed(ship)) return null;
-                str.append(path.get("maxSpeed")).append(" ");
+                str.append("speed <'");
+                str.append(path.get("maxSpeed")).append("' ");
+                chek = true;
             }
-            if (path.containsKey("minCrewSize")) {
+              if (path.containsKey("minCrewSize")) {
+                if(chek) str.append("and ");
                 ship.setCrewSize(Integer.parseInt(path.get("minCrewSize")));
                 if (ShipChekHelper.invalidCrewSize(ship)) return null;
-                str.append(path.get("minCrewSize")).append(" ");
+                str.append("crewSize >'");
+                str.append(path.get("minCrewSize")).append("' ");
+                chek = true;
             }
-            if (path.containsKey("maxCrewSize")) {
+            if (path.containsKey("crewSize")) {
+                if(chek) str.append("and ");
                 ship.setCrewSize(Integer.parseInt(path.get("maxCrewSize")));
                 if (ShipChekHelper.invalidCrewSize(ship)) return null;
-                str.append(path.get("maxCrewSize")).append(" ");
+                str.append("maxCrewSize <'");
+                str.append(path.get("maxCrewSize")).append("' ");
+                chek = true;
             }
-            if (path.containsKey("minRating")) {
+          /*  if (path.containsKey("minRating")) {
                 if (Integer.parseInt("minRating") <= 0) return null;
                 str.append(path.get("minRating")).append(" ");
             }
@@ -192,8 +218,9 @@ public class ShipServiceImpl implements ShipService {
                 if (Integer.parseInt("maxRating") >= 1) return null;
                 str.append(path.get("maxRating")).append(" ");
             }*/
-            if (str.length() > 25) return str;
-            else return stringBuilder;
+
+            if (chek) return str;
+            else return null;
         }
 
     }

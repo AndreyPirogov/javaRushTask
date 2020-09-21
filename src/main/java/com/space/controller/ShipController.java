@@ -89,7 +89,7 @@ public class ShipController {
         if(ship.getUsed() == null) ship.setUsed(false);
         if(ShipChekHelper.invalidCrewSize(ship)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         if (ShipChekHelper.invalidPlanet(ship)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-
+        if (ShipChekHelper.invalidName(ship)) return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         double resultSpeed =Math.round(ship.getSpeed() * 100) / 100.0;
         logger.debug("resultSpeed=" + resultSpeed);
         ship.setSpeed(resultSpeed);
